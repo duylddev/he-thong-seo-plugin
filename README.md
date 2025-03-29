@@ -34,3 +34,5 @@ For each post where you want to use a proxied feature image:
 
 When the post is displayed, the featured image will show the proxy URL instead of the original WordPress featured image.
 When someone visits `https://your-domain.com/featured-image/hello-world.png`, they'll see the content from `https://example.com/image1.png`.
+
+~Current Version:1.1~
