@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hệ thống SEO
  * Description: Proxy external images through internal URLs and use custom feature images from post metadata.
- * Version: 1.0
+ * Version: 1.1
  * Author: Your Name
  */
 
