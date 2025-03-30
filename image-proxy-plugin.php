@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hệ thống SEO
  * Description: Proxy external images through internal URLs and use custom feature images from post metadata.
- * Version: 1.1
+ * Version: 1.2
  * Author: Your Name
  */
 
@@ -41,6 +41,28 @@ function github_plugin_updater_test_init()
 
 }
 
+function image_proxy_register_meta()
+{
+    // Get all post types with featured image support
+    $post_types = get_post_types_by_support('thumbnail');
+
+    // Register meta for each post type
+    foreach ($post_types as $post_type) {
+        register_post_meta(
+            $post_type,
+            'feature_image_url',
+            array(
+                'show_in_rest' => true,
+                'single' => true,
+                'type' => 'string',
+                'auth_callback' => function () {
+                    return current_user_can('edit_posts');
+                }
+            )
+        );
+    }
+}
+add_action('init', 'image_proxy_register_meta');
 
 // Replace feature image with custom URL from post metadata
 function image_proxy_replace_featured_image($html, $post_id, $post_thumbnail_id, $size, $attr)
