@@ -23,7 +23,7 @@ function github_plugin_updater_test_init()
 
         $config = array(
             'slug' => plugin_basename(__FILE__),
-            'proper_folder_name' => 'he-thong-seo',
+            'proper_folder_name' => 'he-thong-seo-plugin-main',
             'api_url' => 'https://api.github.com/repos/duylddev/he-thong-seo-plugin',
             'raw_url' => 'https://raw.github.com/duylddev/he-thong-seo-plugin/main',
             'github_url' => 'https://github.com/duylddev/he-thong-seo-plugin',
