@@ -63,9 +63,31 @@ function image_proxy_register_meta()
 }
 add_action('init', 'image_proxy_register_meta');
 
-// Replace feature image with custom URL from post metadata
-function image_proxy_replace_featured_image($html, $post_id, $post_thumbnail_id, $size, $attr)
+// Override has_post_thumbnail to return true if post has feature_image_url metadata
+function image_proxy_has_post_thumbnail($has_thumbnail, $post = null)
 {
+    if ($has_thumbnail) {
+        return true;
+    }
+
+    $post_id = get_post_field('ID', $post);
+    if (!$post_id) {
+        return false;
+    }
+
+    $feature_image_url = get_post_meta($post_id, 'feature_image_url', true);
+    return !empty($feature_image_url);
+}
+add_filter('has_post_thumbnail', 'image_proxy_has_post_thumbnail', 10, 2);
+
+// Generate thumbnail HTML for posts with only metadata but no featured image
+function image_proxy_post_thumbnail_html($html, $post_id, $post_thumbnail_id, $size, $attr)
+{
+    // If HTML is not empty or post thumbnail ID exists, let the existing filter handle it
+    if (!empty($html) || $post_thumbnail_id) {
+        return $html;
+    }
+
     // Get custom image URL from post metadata
     $feature_image_url = get_post_meta($post_id, 'feature_image_url', true);
 
@@ -78,32 +100,47 @@ function image_proxy_replace_featured_image($html, $post_id, $post_thumbnail_id,
         // Generate the proxy URL
         $proxy_url = site_url('/featured-image/' . $slug . '.png');
 
-        // Get image alt text
-        $alt_text = '';
-        if (isset($attr['alt'])) {
-            $alt_text = $attr['alt'];
-        } elseif ($img_alt = get_post_meta($post_thumbnail_id, '_wp_attachment_image_alt', true)) {
-            $alt_text = $img_alt;
+        // Process title attribute if provided
+        $title = '';
+        if (isset($attr['title'])) {
+            $title = $attr['title'];
         }
 
-        // Get image classes
+        // Process classes
         $classes = 'wp-post-image';
         if (isset($attr['class'])) {
             $classes .= ' ' . $attr['class'];
         }
 
-        // Create new HTML
+        // Get appropriate image sizes based on requested size
+        if (is_array($size)) {
+            $width = $size[0];
+            $height = $size[1];
+        } else {
+            global $_wp_additional_image_sizes;
+            if (isset($_wp_additional_image_sizes[$size])) {
+                $width = $_wp_additional_image_sizes[$size]['width'];
+                $height = $_wp_additional_image_sizes[$size]['height'];
+            } else {
+                $width = get_option("{$size}_size_w");
+                $height = get_option("{$size}_size_h");
+            }
+        }
+
+        // Create thumbnail HTML
         $html = sprintf(
-            '<img src="%s" alt="%s" class="%s">',
+            '<img src="%s" alt="%s" class="%s"%s%s>',
             esc_url($proxy_url),
-            esc_attr($alt_text),
-            esc_attr($classes)
+            get_the_title($post_id),
+            esc_attr($classes),
+            !empty($title) ? ' title="' . esc_attr($title) . '"' : '',
+            (!empty($width) && !empty($height)) ? ' width="' . esc_attr($width) . '" height="' . esc_attr($height) . '"' : ''
         );
     }
 
     return $html;
 }
-add_filter('post_thumbnail_html', 'image_proxy_replace_featured_image', 10, 5);
+add_filter('post_thumbnail_html', 'image_proxy_post_thumbnail_html', 9, 5);
 
 // Handle the image proxy request
 function image_proxy_handle_request()
