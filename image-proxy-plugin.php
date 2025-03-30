@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hệ thống SEO
  * Description: Proxy external images through internal URLs and use custom feature images from post metadata.
- * Version: 1.2
+ * Version: 1.3
  * Author: Your Name
  */
 
@@ -141,6 +141,55 @@ function image_proxy_post_thumbnail_html($html, $post_id, $post_thumbnail_id, $s
     return $html;
 }
 add_filter('post_thumbnail_html', 'image_proxy_post_thumbnail_html', 9, 5);
+
+// Replace feature image with custom URL from post metadata for posts that do have a featured image
+function image_proxy_replace_featured_image($html, $post_id, $post_thumbnail_id, $size, $attr)
+{
+    // Get custom image URL from post metadata
+    $feature_image_url = get_post_meta($post_id, 'feature_image_url', true);
+
+    // If custom image URL exists, replace the default HTML with proxy URL
+    if (!empty($feature_image_url)) {
+        // Get the post slug
+        $post = get_post($post_id);
+        $slug = $post->post_name;
+
+        // Generate the proxy URL
+        $proxy_url = site_url('/featured-image/' . $slug . '.png');
+
+        // Get image alt text
+        $alt_text = '';
+        if (isset($attr['alt'])) {
+            $alt_text = $attr['alt'];
+        } elseif ($img_alt = get_post_meta($post_thumbnail_id, '_wp_attachment_image_alt', true)) {
+            $alt_text = $img_alt;
+        }
+
+        // Get image classes
+        $classes = 'wp-post-image';
+        if (isset($attr['class'])) {
+            $classes .= ' ' . $attr['class'];
+        }
+
+        // Process title attribute if provided
+        $title = '';
+        if (isset($attr['title'])) {
+            $title = $attr['title'];
+        }
+
+        // Create new HTML
+        $html = sprintf(
+            '<img src="%s" alt="%s" class="%s"%s>',
+            esc_url($proxy_url),
+            esc_attr($alt_text),
+            esc_attr($classes),
+            !empty($title) ? ' title="' . esc_attr($title) . '"' : ''
+        );
+    }
+
+    return $html;
+}
+add_filter('post_thumbnail_html', 'image_proxy_replace_featured_image', 10, 5);
 
 // Handle the image proxy request
 function image_proxy_handle_request()
