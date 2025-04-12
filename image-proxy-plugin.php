@@ -98,7 +98,7 @@ function image_proxy_post_thumbnail_html($html, $post_id, $post_thumbnail_id, $s
         $slug = $post->post_name;
 
         // Generate the proxy URL
-        $proxy_url = site_url('/featured-image/' . $slug . '.png');
+        $proxy_url = site_url('/featured-image/' . $slug . '');
 
         // Process title attribute if provided
         $title = '';
@@ -155,7 +155,7 @@ function image_proxy_replace_featured_image($html, $post_id, $post_thumbnail_id,
         $slug = $post->post_name;
 
         // Generate the proxy URL
-        $proxy_url = site_url('/featured-image/' . $slug . '.png');
+        $proxy_url = site_url('/featured-image/' . $slug . '');
 
         // Get image alt text
         $alt_text = '';
@@ -195,7 +195,7 @@ add_filter('post_thumbnail_html', 'image_proxy_replace_featured_image', 10, 5);
 function image_proxy_handle_request()
 {
     // Check if this is a proxy image request
-    if (preg_match('/\/featured-image\/([^\/]+)\.png$/', $_SERVER['REQUEST_URI'], $matches)) {
+    if (preg_match('/\/featured-image\/([^\/]+)$/', $_SERVER['REQUEST_URI'], $matches)) {
         $post_slug = $matches[1];
 
         // Find post with this slug
@@ -239,7 +239,7 @@ add_action('parse_request', 'image_proxy_handle_request');
 function image_proxy_add_rewrite_rules()
 {
     add_rewrite_rule(
-        'featured-image/([^/]+)\.png$',
+        'featured-image/([^/]+)$',
         'index.php?proxy_image=$matches[1]',
         'top'
     );
@@ -303,7 +303,7 @@ function image_proxy_meta_box_callback($post)
     if (empty($slug)) {
         $slug = sanitize_title($post->post_title);
     }
-    $proxy_url = site_url('/featured-image/' . $slug . '.png');
+    $proxy_url = site_url('/featured-image/' . $slug . '');
 
     // Output the fields
     ?>
